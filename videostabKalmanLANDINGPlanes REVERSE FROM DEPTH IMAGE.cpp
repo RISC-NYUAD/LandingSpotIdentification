@@ -2450,6 +2450,11 @@ int main(int argc, char **argv)
 	waitKey(1000);
 
 	int startFrame = atoi(argv[2]);	
+
+
+
+
+
 	float scaleFrame = atof(argv[3]);
 	drawAllRectangles = atoi(argv[4]);
 	bool use2ondBackLayerINPUT = false;
@@ -2586,8 +2591,13 @@ if(!useRealSense){
 }
 
 
-
-
+//v0.1a
+int chosenPlotID = startFrame;
+string imageID = argv[1];
+double depthImageDivider = atof(argv[3]);
+float roll_input =  atof(argv[17]);
+float pitch_input =  atof(argv[18]);
+float circle_radius = atof(argv[19]);
 
 
 //cap.open("./videos/a1.mp4");
@@ -2714,7 +2724,7 @@ if(!useRealSense){
 	Mat imageINFRA(Size(w, h), CV_8UC3, (void*)depth.get_data(), Mat::AUTO_STEP);
 
   //v0.1a
-  imageINFRA = imread("images/168699_depth_norm.png", IMREAD_COLOR);
+  imageINFRA = imread(imageID, IMREAD_COLOR);
 
 	imageINFRA.copyTo(temp1);
 }
@@ -4755,7 +4765,7 @@ if(useRealSense){
 
 
  //v0.1a
-  imageINFRA = imread("images/168699_depth_norm.png", IMREAD_COLOR);
+  imageINFRA = imread(imageID, IMREAD_COLOR);
 
 
 		//cv::imshow("test Infra", imageINFRA);
@@ -4776,14 +4786,38 @@ cv::imshow("test", temp);
     		Mat imageDEPTHRAW(Size(wSS, hSS), CV_16U, (void*)depthRAW.get_data(), Mat::AUTO_STEP);
 
 
+  //v0.1b
+  double min,max;
+  cv::minMaxLoc(imageDEPTHRAW, &min, &max);
+  cout << "MAX MIN = " << min << ", Max=" << max << endl;
+
   //v0.1a
   cout << "depth_scale = " << depth_scale << endl;
-  Mat imageDEPTHRAW22  = imread("images/168699_depth_norm.png", IMREAD_UNCHANGED);//IMREAD_GRAYSCALE);
+  Mat imageDEPTHRAW22  = imread(imageID, IMREAD_UNCHANGED);//IMREAD_GRAYSCALE);//168699_depth_norm //"images/173523_depth_norm.png"
   //cv::normalize(imageDEPTHRAW, imageDEPTHRAW, 0, 65535, cv::NORM_MINMAX);
   //./trackLANDINGPlanes ./vikon/DJI_0218.MP4 0 0.75 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+  //./trackLANDINGPlanes ./images/168699_depth_norm.png 1 0.75 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+  //./trackLANDINGPlanes ./images/168699_depth_norm.png 1 5.923 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
 
-  imageDEPTHRAW22 = imageDEPTHRAW22  / 5.923;// / 5.92;//* 0.027;// / 6.55;
+  //EXP1
+  //./trackLANDINGPlanes ./images/168698_depth_norm.png 2 5.833 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+
+  //EXP2
+  //./trackLANDINGPlanes ./images/182594_depth_norm.png 0 5.853 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+
+  //EXP3
+  
+
+
+  //v0.1b
+  double min1,max1;
+  cv::minMaxLoc(imageDEPTHRAW22, &min1, &max1);
+  cout << "MAX1 MIN1 = " << min1 << ", Max1=" << max1 << endl;
+
+  //imageDEPTHRAW22 = imageDEPTHRAW22 / depthImageDivider;// / 5.923;// / 5.92;//* 0.027;// / 6.55;
   //cv::normalize(imageDEPTHRAW22,imageDEPTHRAW22, 0, 255, cv::NORM_MINMAX);
+  cv::normalize(imageDEPTHRAW22,imageDEPTHRAW22, 0, (float)65535.0 / depthImageDivider, cv::NORM_MINMAX);
+
   imageDEPTHRAW22.copyTo(imageDEPTHRAW);
   //resize(imageDEPTHRAW.getUMat(cv::ACCESS_RW), imageDEPTHRAW, cv::Size(imageDEPTHRAW.cols,imageDEPTHRAW.rows),cv::INTER_LINEAR);
   imshow("TESTTTTTTTTTTTTTTTTTT", imageDEPTHRAW);
@@ -4855,8 +4889,42 @@ bool showImShow = true;
 
 
 
-  pitch = 0;
-  roll = 0;
+  pitch = pitch_input;//0;
+  roll = roll_input;//0;
+
+  //float roll_input =  atof(argv[17]);
+  //float pitch_input =  atof(argv[18]);
+  //float circle_radius = atof(argv[19]);
+
+
+  //EXP1 FINAL
+  //./trackLANDINGPlanes ./images/168698_depth_norm.png 4 11 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+  //EXP2 FINAL
+  //./trackLANDINGPlanes ./images/182594_depth_norm.png 0 12 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+  //EXP3 FINAL
+  //./trackLANDINGPlanes ./images/173523_depth_norm.png 2 12 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
+  //  cv::imwrite(path + std::to_string(frameID) + "_plane_segm" +  ".png", plane_detection.seg_img_);
+
+
+
+  //EXP1 FINAL A 55
+  //./trackLANDINGPlanes ./images/168698_depth_norm.png 4 11 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4 0.01 0.01 0.5
+  //EXP2 FINAL A 31
+  //./trackLANDINGPlanes ./images/194548_depth_norm.png 0 12 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4 0.01 0.01 0.5
+  //./trackLANDINGPlanes ./images/194548_depth_norm.png 1 14 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4 0.0 0.0 0.5
+  //EXP3 FINAL A 59
+  //./trackLANDINGPlanes ./images/173523_depth_norm.png 2 12 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4 0.01 0.01 0.5
+  //./trackLANDINGPlanes ./images/173523_depth_norm.png 2 12.5 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4 0.01 0.01 0.5
+
+
+  //EXP1 FINAL B 55
+  //./trackLANDINGPlanes ./images/168698_depth_norm.png 4 11 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 -5.00966e-03 1.4289e-02 0.003230350194553    //frame 414
+  //EXP2 FINAL B 31
+  //./trackLANDINGPlanes ./images/194548_depth_norm.png 1 12.55 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 -7.49339e-02 2.4893e-03 0.003230353979644    //frame 508
+  //EXP3 FINAL B 59
+  //./trackLANDINGPlanes ./images/173523_depth_norm.png 2 12.5 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 -6.8183e-02 1.54839e-02 0.003510403631196  //frame 600
+  //EXP4 FINAL B 44
+  //./trackLANDINGPlanes ./images/179259_depth_norm.png 0 12.5 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24  9.14626e-03 1.06459e-03 0.003199411340924 //frame 457
 
 
   imshow("TESTTTTTTTTTTTTTTTTTT111111a", imageDEPTHRAW);
@@ -4924,7 +4992,8 @@ plane_detection.readDepthImage(imageDEPTHRAW);
 brightestClosestIMGS = plane_detection.runPlaneDetection();
 //plane_detection.findFarPlaneData("aaa",false);
 
-
+ //v0.1
+ cv::imshow("plane_detection.seg_img_", plane_detection.seg_img_);
 	
 	//
 	//resize(imageINFRACOLOR, imageINFRACOLOR, cv::Size(640,480),cv::INTER_LINEAR);//MATCH SOLUTION SIZE 640x480
@@ -5140,7 +5209,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 				polygon.push_back(linear_ringB);
 				polygonFULL.push_back(linear_ringB);
 				float bestRadius = -1;
-				mapbox::geometry::point<double> p = mapbox::polylabel(polygon, 1.0, bestRadius, image_copy1, r);//,true);
+				mapbox::geometry::point<double> p = mapbox::polylabel(polygon, 1.0, bestRadius, image_copy1, r, chosenPlotID, circle_radius);//,true);
 
 				std::cout << "center = " << p.x << "," <<  p.y <<endl;
 
@@ -5162,7 +5231,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 		    	
 			float bestRadiusA = -1;
 			if(polygonFULL.size() > 0){
-				mapbox::geometry::point<double> pA = mapbox::polylabel(polygonFULL, 1.0, bestRadiusA, image_copy1,r);
+				mapbox::geometry::point<double> pA = mapbox::polylabel(polygonFULL, 1.0, bestRadiusA, image_copy1,r, chosenPlotID, circle_radius);
 
 				//std::cout << "center A = " << pA.x << "," <<  pA.y <<endl;
 				
@@ -5173,6 +5242,8 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 			
 				//circle( image_copy1,  maxCirclePos,   maxCircleRad/5,  Scalar( 0, 155, 255 ),     FILLED,     LINE_AA );
 			    	//circle( image_copy1,   Point( image_copy1.cols/2,image_copy1.rows/2),   maxCircleRad/10,  Scalar( 111, 155, 255 ),     FILLED,     LINE_AA );
+
+
 
 				circle( image_copy1,  Point( pA.x , pA.y),   bestRadiusA/125,  Scalar( 0, 155, 255 ),     FILLED,     LINE_AA );
 				circle( image_copy1,  Point( pA.x , pA.y),   bestRadiusA,  Scalar( 0, 0, 255 ),     3,     LINE_AA );
@@ -5186,7 +5257,8 @@ if(1==1){
 		//circle( imageINFRACOLOR,  Point( bestOverallPoint.x , bestOverallPoint.y),   bestOverallRadius/4,  Scalar( 155, 155, 255 ),     FILLED,     cv::LINE_AA );
 		//circle( imageINFRACOLOR,  Point( bestOverallPoint.x , bestOverallPoint.y),   bestOverallRadius,  Scalar( 155, 0, 255 ),     5,     cv::LINE_AA );
 
-		circle( reproj_norm,  Point( bestOverallPoint.x , bestOverallPoint.y),   bestOverallRadius/4,  Scalar( 155, 155, 255 ),     FILLED,     cv::LINE_AA );
+    
+		circle( reproj_norm,  Point( bestOverallPoint.x , bestOverallPoint.y),   bestOverallRadius/124,  Scalar( 155, 155, 255 ),     FILLED,     cv::LINE_AA );
 		circle( reproj_norm,  Point( bestOverallPoint.x , bestOverallPoint.y),   bestOverallRadius,  Scalar( 155, 0, 255 ),     5,     cv::LINE_AA );
 	}
 	if(1==0 && bestOverallRadius > 0 &&  bestOverallPoint.x < 640 &&  bestOverallPoint.y < 360){
@@ -5205,6 +5277,10 @@ if(1==1){
 }//END 1==0
 	//imshow("Landing spot", imageINFRACOLOR);
 	if(showImShow){
+
+
+
+
 		imshow("Landing spot depthRAW", reproj_norm);
 	}
 
@@ -5217,8 +5293,14 @@ if(1==1){
 if(bestOverallRadius > 0){
 	 double z = (double)(reproj_norm.at<ushort>(bestOverallPoint.x , bestOverallPoint.y)) / 1;
 	cv::Point deprojectedCenter = deProjectPointRollPitch( Point( bestOverallPoint.x , bestOverallPoint.y),z, pitch, roll);
-	circle( imageINFRACOLOR,  deprojectedCenter,   bestOverallRadius/4,  Scalar( 155, 155, 255 ),     FILLED,     cv::LINE_AA );
+	circle( imageINFRACOLOR,  deprojectedCenter,   bestOverallRadius/54,  Scalar( 155, 155, 255 ),     FILLED,     cv::LINE_AA );
 	circle( imageINFRACOLOR,  deprojectedCenter,   bestOverallRadius,  Scalar( 155, 0, 255 ),     5,     cv::LINE_AA );
+
+
+  //v0.1
+  putText(imageINFRACOLOR, to_string(bestOverallRadius), Point(21,21), FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(250, 60, 60),2); 
+
+
 
 	if(showImShow){
 		imshow("Landing spot", imageINFRACOLOR);
