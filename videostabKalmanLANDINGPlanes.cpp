@@ -394,21 +394,16 @@ cv::Mat correctRollPitch(const cv::Mat& input, double roll_deg,
   double fx = 614.17426, fy = 614.51526, cx = 324.29749, cy = 235.59981,
          scale = 1000;
 
-
-//cv::imshow("test Infra1111111111", input);
-         cout << "IMG RES  " << input.cols << ", " << input.rows << endl;
-
   // Convert to pcd
   PointCloud::Ptr cloud(new PointCloud());
 
   for (int j = 0; j < input.rows; ++j) {
     for (int i = 0; i < input.cols; ++i) {
       // Convert to coordinate
-      double u = i*1 + 1.0 - cx, v = j + 1.0 - cy;
+      double u = i + 1.0 - cx, v = j + 1.0 - cy;
 
       // Discard invalid points
-      double z = (double)(input.at<ushort>(j, i*1.0)) / scale;
-      //if (z > 10.0 || z < 0.001) continue;
+      double z = (double)(input.at<ushort>(j, i)) / scale;
       if (z > 10.0 || z < 0.001) continue;
 
       // Manually insert points
@@ -424,8 +419,8 @@ cv::Mat correctRollPitch(const cv::Mat& input, double roll_deg,
   double pitch_rad = pitch_deg * M_PI / 180.;
 
   Eigen::Affine3d tf_a(Eigen::Affine3d::Identity());
-  //tf_a.rotate(Eigen::AngleAxisd(roll_rad, Eigen::Vector3d::UnitX()));
-  //tf_a.rotate(Eigen::AngleAxisd(pitch_rad, Eigen::Vector3d::UnitY()));
+  tf_a.rotate(Eigen::AngleAxisd(roll_rad, Eigen::Vector3d::UnitX()));
+  tf_a.rotate(Eigen::AngleAxisd(pitch_rad, Eigen::Vector3d::UnitY()));
 
   PointCloud::Ptr cloud_tf(new PointCloud());
   pcl::transformPointCloud(*cloud, *cloud_tf, tf_a);
@@ -438,8 +433,8 @@ cv::Mat correctRollPitch(const cv::Mat& input, double roll_deg,
                  cv::Scalar(0));
 
   for (const auto& pt : *cloud_tf) {
-    int u = std::round(fx * (pt.x / pt.z) + cx),
-        v = std::round(fy * (pt.y / pt.z) + cy), depth = std::round(pt.z * scale);
+    int u = std::round(fx * pt.x / pt.z + cx),
+        v = std::round(fy * pt.y / pt.z + cy), depth = std::round(pt.z * scale);
 
     // Out-of-bounds check
     if ((u < 0) || (u >= output.cols) || (v < 0) || (v >= output.rows)) {
@@ -451,20 +446,6 @@ cv::Mat correctRollPitch(const cv::Mat& input, double roll_deg,
       output.at<ushort>(v, u) = static_cast<size_t>(depth);
     }
   }
-
-  //input.copyTo(output);
-  cv::Mat outputA(input.rows, input.cols, CV_16UC1,
-                 cv::Scalar(0));
-  for (int j = 0; j < input.rows; ++j) {
-    for (int i = 0; i < input.cols; ++i) {
-      // Convert to coordinate
-      double u = i, v = j;
-     // output.at<ushort>(v, u) = static_cast<size_t>(input.at<ushort>(v, u));
-     
-    }
-  }
-  //cv::normalize(input, outputA, 0, 65535, NORM_MINMAX, CV_16UC1);
-  input.convertTo(outputA, CV_16UC1,0.065);
 
   // Median filter to eliminate artifacts
   cv::medianBlur(output, output, 5);
@@ -2555,8 +2536,7 @@ if(!useRealSense){
 
 			//cap.open("/dev/v4l/by-id/usb-Intel_R__RealSense_TM__Depth_Camera_435i_Intel_R__RealSense_TM__Depth_Camera_435i_046523052226-video-index0");
 			//.open("/dev/v4l/by-id/usb-Intel_R__RealSense_TM__Depth_Camera_435i_Intel_R__RealSense_TM__Depth_Camera_435i_046523052445-video-index0");
-			//cap.open("/dev/v4l/by-id/usb-Intel_R__RealSense_TM__Depth_Camera_435i_Intel_R__RealSense_TM__Depth_Camera_435i_046523052226-video-index2");
-      cap.open("/dev/v4l/by-id/usb-Intel_R__RealSense_TM__Depth_Camera_435i_Intel_R__RealSense_TM__Depth_Camera_435i-video-index0");
+			cap.open("/dev/v4l/by-id/usb-Intel_R__RealSense_TM__Depth_Camera_435i_Intel_R__RealSense_TM__Depth_Camera_435i_046523052226-video-index2");
 
 			//./trackBALOONS ./vikon/DJI_0218.MP4 0 0.75 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
 			//./trackBALOONS ./exp3/outVIDEO_2021-05-26_04-38-41.avi 0 0.75 0 1 0 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
@@ -2712,10 +2692,6 @@ if(!useRealSense){
 
 	// Create OpenCV matrix of size (w,h) from the colorized depth data
 	Mat imageINFRA(Size(w, h), CV_8UC3, (void*)depth.get_data(), Mat::AUTO_STEP);
-
-  //v0.1a
-  imageINFRA = imread("images/168699_depth_norm.png", IMREAD_COLOR);
-
 	imageINFRA.copyTo(temp1);
 }
 
@@ -2782,7 +2758,7 @@ if(!useRealSense){
 	// Create a tracker
 	string trackerType = trackerTypes[6]; //2
  
-	//Ptr<Tracker> tracker;
+	Ptr<Tracker> tracker;
 	//Ptr<Tracker> tracker2;	
 
 	cout <<  CV_MINOR_VERSION << "," <<CV_MAJOR_VERSION << endl;
@@ -4752,43 +4728,17 @@ if(useRealSense){
 		// Create OpenCV matrix of size (w,h) from the colorized depth data
 		Mat imageINFRA(Size(wSS, hSS), CV_8UC3, (void*)depth.get_data(), Mat::AUTO_STEP);
 		Mat imageINFRACOLOR(Size(w1, h1), CV_8UC3, (void*)color.get_data(), Mat::AUTO_STEP);
-
-
- //v0.1a
-  imageINFRA = imread("images/168699_depth_norm.png", IMREAD_COLOR);
-
-
 		//cv::imshow("test Infra", imageINFRA);
 
 videoA.write(imageINFRACOLOR);
 		
 		cv::cvtColor(imageINFRACOLOR,imageINFRACOLOR, cv::COLOR_RGB2BGR);
 		imageINFRACOLOR.copyTo(temp);
-
-
-cv::imshow("test", temp);
-
-
 		// Query depth scale
     		float depth_scale = depthRAW.get_units();
 
  		// Create OpenCV matrix of size (w,h) from the depth data for some processing
     		Mat imageDEPTHRAW(Size(wSS, hSS), CV_16U, (void*)depthRAW.get_data(), Mat::AUTO_STEP);
-
-
-  //v0.1a
-  cout << "depth_scale = " << depth_scale << endl;
-  Mat imageDEPTHRAW22  = imread("images/168699_depth_norm.png", IMREAD_UNCHANGED);//IMREAD_GRAYSCALE);
-  //cv::normalize(imageDEPTHRAW, imageDEPTHRAW, 0, 65535, cv::NORM_MINMAX);
-  //./trackLANDINGPlanes ./vikon/DJI_0218.MP4 0 0.75 0 1 2 2 0 0 1 0.3 0.1 9 0.08 0.07 24 15 416 0.4
-
-  imageDEPTHRAW22 = imageDEPTHRAW22  / 5.923;// / 5.92;//* 0.027;// / 6.55;
-  //cv::normalize(imageDEPTHRAW22,imageDEPTHRAW22, 0, 255, cv::NORM_MINMAX);
-  imageDEPTHRAW22.copyTo(imageDEPTHRAW);
-  //resize(imageDEPTHRAW.getUMat(cv::ACCESS_RW), imageDEPTHRAW, cv::Size(imageDEPTHRAW.cols,imageDEPTHRAW.rows),cv::INTER_LINEAR);
-  imshow("TESTTTTTTTTTTTTTTTTTT", imageDEPTHRAW);
-
-
 
 if(1==0){
 	//imageDEPTHRAW.copyTo(new_depth_image);
@@ -4813,7 +4763,7 @@ if(1==0){
 
 
 
-bool showImShow = true;
+bool showImShow = false;
 
 
 
@@ -4853,33 +4803,14 @@ bool showImShow = true;
 
 	cout << "ROLL = " << roll << " ,PITCH = " << pitch << endl;
 
-
-
-  pitch = 0;
-  roll = 0;
-
-
-  imshow("TESTTTTTTTTTTTTTTTTTT111111a", imageDEPTHRAW);
-
   // Calculate reprojection based on roll / pitch
-  cv::Mat reproj_img =  correctRollPitch(imageDEPTHRAW, pitch, roll); //deProjectRollPitch
+  cv::Mat reproj_img = correctRollPitch(imageDEPTHRAW, pitch, roll); //deProjectRollPitch
   //std::cout << "[TIMING] Total: " << timeSince(total) << std::endl;
-
-  imshow("TESTTTTTTTTTTTTTTTTTT111111b", reproj_img);
 
   // Visualize images & histograms (normalize to display discrepancy)
   cv::Mat depth_norm, reproj_norm;
   cv::normalize(imageDEPTHRAW, depth_norm, 0, 65535, cv::NORM_MINMAX);
-  //v0.1
-  // cv::normalize(depth_norm,imageDEPTHRAW, 0, 255, cv::NORM_MINMAX);
-  // cv::normalize(imageDEPTHRAW, depth_norm, 0, 65535, cv::NORM_MINMAX);
   cv::normalize(reproj_img, reproj_norm, 0, 65535, cv::NORM_MINMAX);
-
-  
-
-  imshow("TESTTTTTTTTTTTTTTTTTT111111c", reproj_norm);
-
-  // imshow("TESTTTTTTTTTTTTTTTTTT", depth_norm);
 
   // cv::Mat depth_hist = img2hist(imageDEPTHRAW);
   // cv::Mat reproj_hist = img2hist(reproj_img);
@@ -4938,7 +4869,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 	{
 
 		if(showImShow){
-			//imshow("shape MAX WHITE " + to_string(r), brightestClosestIMGS[r]);
+			imshow("shape MAX WHITE " + to_string(r), brightestClosestIMGS[r]);
 		}
 		//brightestClosestIMGS.push_back(separateShapes[brightestClosest[r]]);		
 		//FIND CONTOURS and LANDING CIRCLES
@@ -4949,7 +4880,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 		cv::cvtColor(brightestClosestIMGS[r], thresh, cv::COLOR_BGR2GRAY);
 		//cv::Canny( thresh, thresh, threshA, threshA*2);
 		if(showImShow){
-			//cv::imshow("GREY",thresh);
+			cv::imshow("GREY",thresh);
 		}
 		//threshold(img_gray, thresh, 254, 255, THRESH_BINARY);
 		//dilated.convertTo(thresh, CV_8UC1);	
@@ -4961,7 +4892,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 		cv::drawContours(image_copy1, contours1, -1, cv::Scalar(155, 255, 0), 2, cv::LINE_AA);
 		//	cv::drawContours(imageINFRACOLOR, contours1, -1, cv::Scalar(155, 255, 0), 2, cv::LINE_AA);
 		if(showImShow){
-			//cv::imshow("image_copy1" + to_string(r),image_copy1);
+			cv::imshow("image_copy1" + to_string(r),image_copy1);
 		}
 		
 		int minSize = 45;
@@ -4992,7 +4923,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 			//circle( drawing, centers[i], (int)radius[i], color, 2 );
 		}
 		if(showImShow){
-			//imshow( "Contours", drawing );
+			imshow( "Contours", drawing );
 		}
 		vector<vector<Point> > contoursLARGE;
 		for( size_t i = 0; i< contours1.size(); i++ )
@@ -5026,7 +4957,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 
 			//CLIPPER OFFSET
 			ClipperOffset coB;
-			float offsetRadius = 1;
+			float offsetRadius = 35;
 		  	coB.AddPaths(solutionB, jtSquare, etClosedPolygon);//jtMiter, jtSquare, jtRound
 		  	coB.Execute(solutionC, offsetRadius);
 
@@ -5060,8 +4991,6 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 			
 			Point maxCirclePos = Point(0,0);
 			float maxCircleRad = -1;
-
-      
 
 			for(int i=0;i<solutionC.size();i++){
 				mapbox::geometry::linear_ring<double> linear_ringB;
@@ -5140,7 +5069,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 				polygon.push_back(linear_ringB);
 				polygonFULL.push_back(linear_ringB);
 				float bestRadius = -1;
-				mapbox::geometry::point<double> p = mapbox::polylabel(polygon, 1.0, bestRadius, image_copy1, r);//,true);
+				mapbox::geometry::point<double> p = mapbox::polylabel(polygon, 1.0, bestRadius);//,true);
 
 				std::cout << "center = " << p.x << "," <<  p.y <<endl;
 
@@ -5162,7 +5091,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 		    	
 			float bestRadiusA = -1;
 			if(polygonFULL.size() > 0){
-				mapbox::geometry::point<double> pA = mapbox::polylabel(polygonFULL, 1.0, bestRadiusA, image_copy1,r);
+				mapbox::geometry::point<double> pA = mapbox::polylabel(polygonFULL, 1.0, bestRadiusA);
 
 				//std::cout << "center A = " << pA.x << "," <<  pA.y <<endl;
 				
@@ -5174,7 +5103,7 @@ brightestClosestIMGS = plane_detection.runPlaneDetection();
 				//circle( image_copy1,  maxCirclePos,   maxCircleRad/5,  Scalar( 0, 155, 255 ),     FILLED,     LINE_AA );
 			    	//circle( image_copy1,   Point( image_copy1.cols/2,image_copy1.rows/2),   maxCircleRad/10,  Scalar( 111, 155, 255 ),     FILLED,     LINE_AA );
 
-				circle( image_copy1,  Point( pA.x , pA.y),   bestRadiusA/125,  Scalar( 0, 155, 255 ),     FILLED,     LINE_AA );
+				circle( image_copy1,  Point( pA.x , pA.y),   bestRadiusA/5,  Scalar( 0, 155, 255 ),     FILLED,     LINE_AA );
 				circle( image_copy1,  Point( pA.x , pA.y),   bestRadiusA,  Scalar( 0, 0, 255 ),     3,     LINE_AA );
 			    	//circle( image_copy1,   Point( image_copy1.cols/2,image_copy1.rows/2),   bestRadiusA/10,  Scalar( 111, 155, 255 ),     FILLED,     LINE_AA );
 			}
