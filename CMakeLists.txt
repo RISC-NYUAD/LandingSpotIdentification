@@ -157,7 +157,7 @@ include_directories(src/include/MRF2.2)
 link_directories(src/include/MRF2.2)
 file(GLOB sources "src/plane_detection.cpp")
 
-add_executable(track src/videostabKalman.cpp)
+#add_executable(track src/videostabKalman.cpp)
 #add_executable(trackBALOONS src/videostabKalmanBALOONS.cpp)
 #add_executable(clipbot src/clipbot.cpp)
 #add_executable(trackLANDING src/videostabKalmanLANDING.cpp)
@@ -166,7 +166,7 @@ add_executable(trackLANDINGPlanes src/videostabKalmanLANDINGPlanes.cpp ${sources
 #target_link_libraries(webStream Qt5::Core)
 
 #target_include_directories(track PRIVATE "/home/risc/OPENCV/installation/OpenCV-4.5.0/lib/")
-target_link_libraries(track ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} -lv4l2 -ludev -lSOIL -lGL -lGLEW -lsfml-window -lsfml-system  darknet -lm -luvc -lopencv_dnn ) 
+#target_link_libraries(track ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} -lv4l2 -ludev -lSOIL -lGL -lGLEW -lsfml-window -lsfml-system  darknet -lm -luvc -lopencv_dnn ) 
 
 #target_link_libraries(clipbot ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} -lv4l2 -ludev -lSOIL -lGL -lGLEW -lsfml-window -lsfml-system  darknet -lm -luvc) # Eigen3::Eigen)
 #target_link_libraries(track ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} ${DNN_LIBS} -lv4l2 -ludev -lSOIL -lGL -lGLEW -lsfml-window -lsfml-system  darknet -lm -luvc -lopencv_dnn ) 
